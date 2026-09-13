@@ -1,8 +1,9 @@
-import requests
-from collections import Counter
-import time
 import json
-from datetime import date
+import time
+from collections import Counter
+from datetime import datetime, timezone
+
+import requests
 
 OPENFDA_API_URL = "https://api.fda.gov/drug/shortages.json"
 openFDA_response = requests.get(
@@ -19,7 +20,7 @@ print(f'Package_ndc of first record:{shortage_data['results'][0]['package_ndc']}
 record_list = []
 skip_counter = 0
 while len(record_list) < shortage_data['meta']['results']['total'] :
-    for attempts in range(MAX_ATTEMPTS):
+    for attempt in range(MAX_ATTEMPTS):
         openFDA_response = requests.get(
     OPENFDA_API_URL, {"limit" : 100,
                     'skip': 100})
@@ -91,7 +92,7 @@ for record in record_list:
 
 
 
-todays_date = date.today()
+todays_date = datetime.now(timezone.utc).date()
 
 filename= f'shortage_{todays_date}.json'
 with open(filename, 'w') as f:
