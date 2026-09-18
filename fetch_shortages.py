@@ -1,16 +1,16 @@
 import json
-import time
+
 from collections import Counter
 from datetime import datetime, timezone
+from api_client import fetch_retry
 
 import requests
 
 OPENFDA_API_URL = "https://api.fda.gov/drug/shortages.json"
 openFDA_response = requests.get(
 OPENFDA_API_URL, {"limit" : 100,
-                  'skip': 100})
-MAX_ATTEMPTS=3
-INITIAL_WAIT =1
+                  'skip': 0})
+
 print(f"Status code: {openFDA_response.status_code}")
 shortage_data = openFDA_response.json()
 print(f"Total Shortage Presentations {shortage_data["meta"]["results"]["total"]}")
@@ -20,21 +20,14 @@ print(f'Package_ndc of first record:{shortage_data['results'][0]['package_ndc']}
 record_list = []
 skip_counter = 0
 while len(record_list) < shortage_data['meta']['results']['total'] :
-    for attempt in range(MAX_ATTEMPTS):
-        openFDA_response = requests.get(
-    OPENFDA_API_URL, {"limit" : 100,
-                    'skip': 100})
-        if openFDA_response.status_code == 200:
-            break
-        time.sleep(INITIAL_WAIT*(2**attempt))  
-    if openFDA_response.status_code != 200:
-        raise Exception(f"Failed after {MAX_ATTEMPTS} attempts at skip {skip_counter}, status {openFDA_response.status_code}")
     
     
-    openFDA_response = requests.get(OPENFDA_API_URL, {"limit" : 100, 'skip': skip_counter})
-    shortage_data = openFDA_response.json()
+    shortage_data = fetch_retry(OPENFDA_API_URL,{"limit" : 100,
+                  'skip': skip_counter} )
     record_list += shortage_data['results']
     skip_counter+=100
+    
+
 
 print(len(record_list))
 #matching counts doesnt prove matching records so if skip misbehaved, 
@@ -72,9 +65,9 @@ print(f'Unique Composite Keys: {len(set(composite_keys))}')
 
 
 
-counts = Counter(composite_keys)
+key = Counter(composite_keys)
 repeated= []
-for composite_keys,n in counts.items():
+for composite_keys,n in key.items():
     if n >1:
         repeated.append(composite_keys)
 
