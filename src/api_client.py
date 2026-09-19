@@ -1,6 +1,7 @@
 ##make a request, if it fails, wait and try again a few times before giving up
 ## NADAC needs this too so instead of making two of these files we are writing them once in a file both scripts import so I only have to fix bugs once.
 import time
+
 import requests
 
 MAX_ATTEMPTS=3
