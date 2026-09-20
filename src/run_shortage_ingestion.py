@@ -1,13 +1,15 @@
 
-import requests
+import json
 import os
 from datetime import datetime, timezone
-import json
+
+import requests
+
 from api_client import fetch_retry
 
 OPENFDA_API_URL = "https://api.fda.gov/drug/shortages.json"
 OUTPUT_DIR = os.getenv('OUTPUT_DIR', 'output')
-
+PAGE_SIZE = 100
 def fetch_shortages():
     
     openFDA_response = requests.get(
