@@ -1,15 +1,18 @@
 
 import requests
-
+import os
+from datetime import datetime, timezone
+import json
 from api_client import fetch_retry
 
+OPENFDA_API_URL = "https://api.fda.gov/drug/shortages.json"
+OUTPUT_DIR = os.getenv('OUTPUT_DIR', 'output')
 
 def fetch_shortages():
-    OPENFDA_API_URL = "https://api.fda.gov/drug/shortages.json"
+    
     openFDA_response = requests.get(
     OPENFDA_API_URL, {"limit" : 100,
                     'skip': 0})
-
     print(f"Status code: {openFDA_response.status_code}")
     shortage_data = openFDA_response.json()
     print(f"Total Shortage Presentations {shortage_data["meta"]["results"]["total"]}")
@@ -25,6 +28,13 @@ def fetch_shortages():
                     'skip': skip_counter} )
         record_list += shortage_data['results']
         skip_counter+=100
+    todays_date = datetime.now(timezone.utc).date()
+    filename = os.path.join(OUTPUT_DIR, f'shortage_{todays_date}.json')
+    with open(filename, 'w') as f:
+        json.dump(record_list, f, indent=2)
+    print(f'Wrote {len(record_list)} records to {filename}')
+
+
     return len(record_list)
 
 
